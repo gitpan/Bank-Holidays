@@ -1,5 +1,8 @@
 Revision history for Perl extension Bank::Holidays.
 
+0.56 Thu Feb 08 15:42:00 2007 
+  - Fixed PreReq
+
 0.55  Tue Feb 14 07:38:15 2006
 	- Initial release to CPAN
 

@@ -28,7 +28,7 @@ our @EXPORT = qw(
 	
 );
 
-our $VERSION = '0.55';
+our $VERSION = '0.56';
 
 sub new {
 	my ( $package, %params ) = @_;
@@ -94,6 +94,11 @@ sub reserve_holidays() {
 
 sub is_holiday {
 	my ( $param, %opts ) = @_;
+
+  if ( $opts{date} ) 
+  {
+     $param->{dt} = $opts{date};
+  }
 	
 	if ( $opts{Tomorrow} ) {
 		$param->{dt}->add(days => 1);

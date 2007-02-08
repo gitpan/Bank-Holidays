@@ -1,4 +1,4 @@
-Bank-Holidays version 0.55
+Bank-Holidays version 0.56
 ==========================
 
 INSTALLATION
@@ -16,10 +16,11 @@ This module requires these other modules and libraries:
 
    DateTime
    HTML::TableExtract
+	 LWP
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2006 by Tyler Hardison
+Copyright (C) 2006,2007 by Tyler Hardison
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.3 or,

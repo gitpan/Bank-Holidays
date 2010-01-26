@@ -28,7 +28,7 @@ our @EXPORT = qw(
 	
 );
 
-our $VERSION = '0.56';
+our $VERSION = '0.65';
 
 sub new {
 	my ( $package, %params ) = @_;
@@ -44,7 +44,7 @@ sub reserve_holidays() {
 	my $te = HTML::TableExtract->new();
 
 
-        $te->parse(get("http://www.federalreserve.gov/releases/k8/default.htm"));
+        $te->parse(get("http://www.federalreserve.gov/aboutthefed/k8.htm"));
 
         my $months =
                 {
@@ -65,7 +65,7 @@ sub reserve_holidays() {
         my $holidays;
 
         foreach my $ts ( $te->tables) {
-                next if ($ts->coords)[0] != 1;
+                next if ($ts->coords)[0] != 2;
                 my @colyears;
                 foreach my $row ( $ts->rows ) {
 
@@ -76,7 +76,7 @@ sub reserve_holidays() {
                                 if ( $col ) {
                                         if ( $col =~ /(\d{4})/ ) {
                                                 $colyears[$colcount] = $1;
-                                        } elsif ( $col =~ /(\w+)\s(\d{2})(\d|)$/ ) {
+                                        } elsif ( $col =~ /(\w+)\s(\d{1,2})(\*?)/ ) {
                                                 push @{$holidays->{$colyears[$colcount]}->{$months->{$1}}},
                                                 {
                                                         day     => $2,
@@ -162,6 +162,10 @@ is_holiday( [ Yesterday|Tomorrow => 1 ] ) To determine what day to check default
 =head1 AUTHOR
 
 Tyler Hardison, E<lt>thardison@bayfed.comE<gt>
+
+=head1 THANKS TO
+
+Alex White E<lt>wu@geekfarm.orgE<gt> - For providing a patch for 2010 changes to the fed's site.
 
 =head1 COPYRIGHT AND LICENSE
 

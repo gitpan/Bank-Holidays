@@ -1,4 +1,8 @@
 Revision history for Perl extension Bank::Holidays.
+0.66 Fri Mar 02 07:54:00 2012
+  - rleap found out that LWP::Simple can no longer read the
+       holidays page. Switched to UA module and it works fine.
+       Very sneaky Federal Reserve!
 
 0.56 Thu Feb 08 15:42:00 2007 
   - Fixed PreReq

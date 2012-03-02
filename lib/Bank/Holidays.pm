@@ -4,7 +4,7 @@ use 5.006001;
 use strict;
 use warnings;
 use HTML::TableExtract;
-use LWP::Simple;
+use LWP::UserAgent;
 use DateTime;
 
 require Exporter;
@@ -18,100 +18,115 @@ our @ISA = qw(Exporter);
 # This allows declaration	use Bank::Holidays ':all';
 # If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
 # will save memory.
-our %EXPORT_TAGS = ( 'all' => [ qw( is_holiday reserve_holidays
-	
-) ] );
+our %EXPORT_TAGS = (
+    'all' => [
+        qw( is_holiday reserve_holidays
+
+          )
+    ]
+);
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw(
-	
+
 );
 
-our $VERSION = '0.65';
+our $VERSION = '0.66';
 
-sub new {
-	my ( $package, %params ) = @_;
+sub new
+{
+    my ( $package, %params ) = @_;
 
-	my $param;
-	$param->{dt} 		= $params{dt} || DateTime->now;
-	$param->{holidays}	= reserve_holidays();
-	bless $param, $package;
+    my $param;
+    $param->{dt} = $params{dt} || DateTime->now;
+    $param->{holidays} = reserve_holidays();
+    bless $param, $package;
 
 }
 
-sub reserve_holidays() {
-	my $te = HTML::TableExtract->new();
+sub reserve_holidays()
+{
+    my $te = HTML::TableExtract->new();
 
+    my $ua = new LWP::UserAgent;
 
-        $te->parse(get("http://www.federalreserve.gov/aboutthefed/k8.htm"));
+    $ua->timeout(120);
 
-        my $months =
-                {
-                        'January'  => 1, 
-                        'February' => 2,
-                        'March'    => 3,
-                        'April'    => 4,
-                        'May'      => 5,
-                        'June'     => 6,
-                        'July'     => 7,
-                         'August'   => 8,
-                         'September'=> 9,
-                        'October'  => 10,
-                        'November' => 11,
-                        'December' => 12
-                };
+    my $url = 'http://www.federalreserve.gov/aboutthefed/k8.htm';
 
-        my $holidays;
+    my $request = new HTTP::Request( 'GET', $url );
 
-        foreach my $ts ( $te->tables) {
-                next if ($ts->coords)[0] != 2;
-                my @colyears;
-                foreach my $row ( $ts->rows ) {
+    my $response = $ua->request($request);
 
-                        next unless @$row;
-                        map { s/\r|\n//g if $_ } @$row;
-                        my $colcount = 0;
-                        foreach my $col ( @$row ) {
-                                if ( $col ) {
-                                        if ( $col =~ /(\d{4})/ ) {
-                                                $colyears[$colcount] = $1;
-                                        } elsif ( $col =~ /(\w+)\s(\d{1,2})(\*?)/ ) {
-                                                push @{$holidays->{$colyears[$colcount]}->{$months->{$1}}},
-                                                {
-                                                        day     => $2,
-                                                        satflag => $3
-                                                };
+    my $content = $response->content();
 
-                                        }
-                                }
-                                $colcount++;
-                        }
-                }   
-	}
-	return $holidays;
+    $te->parse($content);
+
+    my $months = {
+        'January'   => 1,
+        'February'  => 2,
+        'March'     => 3,
+        'April'     => 4,
+        'May'       => 5,
+        'June'      => 6,
+        'July'      => 7,
+        'August'    => 8,
+        'September' => 9,
+        'October'   => 10,
+        'November'  => 11,
+        'December'  => 12
+    };
+
+    my $holidays;
+
+    foreach my $ts ( $te->tables ) {
+        next if ( $ts->coords ) != 2;
+        my @colyears;
+        foreach my $row ( $ts->rows ) {
+
+            next unless @$row;
+            map { s/\r|\n//g if $_ } @$row;
+            my $colcount = 0;
+            foreach my $col (@$row) {
+                if ($col) {
+                    if ( $col =~ /(\d{4})/ ) {
+                        $colyears[$colcount] = $1;
+                    } elsif ( $col =~ /(\w+)\s(\d{1,2})(\*?)/ ) {
+                        push @{ $holidays->{ $colyears[$colcount] }->{ $months->{$1} } },
+                          {
+                            day     => $2,
+                            satflag => $3
+                          };
+
+                    }
+                }
+                $colcount++;
+            }
+        }
+    }
+    return $holidays;
 }
 
-sub is_holiday {
-	my ( $param, %opts ) = @_;
+sub is_holiday
+{
+    my ( $param, %opts ) = @_;
 
-  if ( $opts{date} ) 
-  {
-     $param->{dt} = $opts{date};
-  }
-	
-	if ( $opts{Tomorrow} ) {
-		$param->{dt}->add(days => 1);
-	} elsif ( $opts{Yesterday} ) {
-		$param->{dt}->subtract( days => 1 );
-	}
-	return 1 if $param->{dt}->dow == 7;
-	foreach my $holiday ( @{$param->{holidays}->{$param->{dt}->year}->{int($param->{dt}->month)}} ) {
-		return 1 if int($param->{dt}->day) == $holiday->{day};
-	}
-	return undef;
+    if ( $opts{date} ) {
+        $param->{dt} = $opts{date};
+    }
+
+    if ( $opts{Tomorrow} ) {
+        $param->{dt}->add( days => 1 );
+    } elsif ( $opts{Yesterday} ) {
+        $param->{dt}->subtract( days => 1 );
+    }
+    return 1 if $param->{dt}->dow == 7;
+    foreach my $holiday ( @{ $param->{holidays}->{ $param->{dt}->year }->{ int( $param->{dt}->month ) } } ) {
+        return 1 if int( $param->{dt}->day ) == $holiday->{day};
+    }
+    return undef;
 }
-	
 
 # Preloaded methods go here.
 
@@ -121,7 +136,7 @@ __END__
 
 =head1 NAME
 
-Bank::Holidays - Perl extension for determining Federal Reserve holidays. 2006 - 2010
+Bank::Holidays - Perl extension for determining Federal Reserve holidays. 2012 - 2016
 
 =head1 SYNOPSIS
 
@@ -149,7 +164,7 @@ Bank::Holidays - Perl extension for determining Federal Reserve holidays. 2006 -
 =head1 DESCRIPTION
 
 Bank::Holidays reads a page from the Federal Reserve's website that contains 
-holidays until 2010. However should the FR's site change this code may not work.
+holidays until 2016. However should the FR's site change this code may not work.
 This code is very useful for determining days that a valid banking transaction 
 can occur, remembering that Sunday is never a banking day.
 
@@ -161,11 +176,12 @@ is_holiday( [ Yesterday|Tomorrow => 1 ] ) To determine what day to check default
 
 =head1 AUTHOR
 
-Tyler Hardison, E<lt>thardison@bayfed.comE<gt>
+Tyler Hardison, E<lt>thardison@seraph-net.netE<gt>
 
 =head1 THANKS TO
 
 Alex White E<lt>wu@geekfarm.orgE<gt> - For providing a patch for 2010 changes to the fed's site.
+Robert Leap E<lt>robertleap@gmail.comE-<gt> - For providing a patch for the 2012-2016 holday period.
 
 =head1 COPYRIGHT AND LICENSE
 

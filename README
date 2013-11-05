@@ -1,4 +1,4 @@
-Bank-Holidays version 0.56
+Bank-Holidays version 0.75
 ==========================
 
 INSTALLATION
@@ -25,4 +25,3 @@ Copyright (C) 2006,2007 by Tyler Hardison
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.3 or,
 at your option, any later version of Perl 5 you may have available.
-

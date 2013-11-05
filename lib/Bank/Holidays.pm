@@ -32,7 +32,7 @@ our @EXPORT = qw(
 
 );
 
-our $VERSION = '0.66';
+our $VERSION = '0.75';
 
 sub new
 {
@@ -53,13 +53,37 @@ sub reserve_holidays()
 
     $ua->timeout(120);
 
-    my $url = 'http://www.federalreserve.gov/aboutthefed/k8.htm';
+    my $home = $ENV{HOME} || $ENV{LOCALAPPDATA};
 
-    my $request = new HTTP::Request( 'GET', $url );
+    unless ( -d $home . "/.bankholidays" ){
+        mkdir($home."/.bankholidays");
+    }
 
-    my $response = $ua->request($request);
+    my $cache = $home . "/.bankholidays/frbholidays.html";
 
-    my $content = $response->content();
+    # Cache the content from the FRB since holdays are unlikely to
+    # change from day to day (or year to year)
+
+    my $content;
+
+    if (-f $cache && (time() - (stat($cache))[9]) < 86400) {
+        open(my $fh, "<", $cache) or die $!;
+        local $/ = undef;
+        $content = <$fh>;
+        close $fh;
+    } else {
+        my $url = 'http://www.federalreserve.gov/aboutthefed/k8.htm';
+
+        my $request = new HTTP::Request( 'GET', $url );
+
+        my $response = $ua->request($request);
+
+        $content = $response->content();
+
+        open(my$fh, ">", $cache) or die $!;
+        print $fh $content;
+        close $fh;
+    }
 
     $te->parse($content);
 
@@ -136,15 +160,15 @@ __END__
 
 =head1 NAME
 
-Bank::Holidays - Perl extension for determining Federal Reserve holidays. 2012 - 2016
+Bank::Holidays - Perl extension for determining Federal Reserve holidays. 2013 - 2017
 
 =head1 SYNOPSIS
 
   use Bank::Holidays;
-  
+
   # Using the date => reference you can specify any date you like.
   my $bank = Bank::Holidays->new( date => DateTime->now ); # or any datetime object
-  
+
   # Check yesterday to see if it was a holiday
   print "Yesterday ";
   $bank->is_holiday( Yesterday => 1 ) ? print "is " : print "is not";
@@ -163,9 +187,9 @@ Bank::Holidays - Perl extension for determining Federal Reserve holidays. 2012 -
 
 =head1 DESCRIPTION
 
-Bank::Holidays reads a page from the Federal Reserve's website that contains 
+Bank::Holidays reads a page from the Federal Reserve's website that contains
 holidays until 2016. However should the FR's site change this code may not work.
-This code is very useful for determining days that a valid banking transaction 
+This code is very useful for determining days that a valid banking transaction
 can occur, remembering that Sunday is never a banking day.
 
 =head2 methods
@@ -181,11 +205,12 @@ Tyler Hardison, E<lt>thardison@seraph-net.netE<gt>
 =head1 THANKS TO
 
 Alex White E<lt>wu@geekfarm.orgE<gt> - For providing a patch for 2010 changes to the fed's site.
+
 Robert Leap E<lt>robertleap@gmail.comE-<gt> - For providing a patch for the 2012-2016 holday period.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006 by Tyler Hardison
+Copyright (C) 2013 by Tyler Hardison
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.3 or,

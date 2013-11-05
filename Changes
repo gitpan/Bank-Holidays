@@ -1,4 +1,7 @@
 Revision history for Perl extension Bank::Holidays.
+0.76 Tue Nov 05 01:36:00 2013
+  - Use make dist. (Color me shamed)
+
 0.75 Tue Nov 05 11:49:00 2013
   - Cache the data from the Fed to avoid reloading the page.
       Helps with performance.

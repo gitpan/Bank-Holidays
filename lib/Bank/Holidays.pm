@@ -19,11 +19,11 @@ our @ISA = qw(Exporter);
 # If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
 # will save memory.
 our %EXPORT_TAGS = (
-    'all' => [
-        qw( is_holiday reserve_holidays
+  'all' => [
+    qw( is_holiday reserve_holidays
 
-          )
-    ]
+      )
+  ]
 );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
@@ -32,124 +32,124 @@ our @EXPORT = qw(
 
 );
 
-our $VERSION = '0.76';
+our $VERSION = '0.78';
 
-sub new
-{
-    my ( $package, %params ) = @_;
+sub new {
+  my ( $package, %params ) = @_;
 
-    my $param;
-    $param->{dt} = $params{dt} || DateTime->now;
-    $param->{holidays} = reserve_holidays();
-    bless $param, $package;
+  my $param;
+  $param->{dt} = $params{dt} || DateTime->now;
+  $param->{holidays} = reserve_holidays();
+  bless $param, $package;
 
 }
 
-sub reserve_holidays()
-{
-    my $te = HTML::TableExtract->new();
+sub reserve_holidays() {
+  my $te = HTML::TableExtract->new();
 
-    my $ua = new LWP::UserAgent;
+  my $ua = new LWP::UserAgent;
 
-    $ua->timeout(120);
+  $ua->timeout(120);
 
-    my $home = $ENV{HOME} || $ENV{LOCALAPPDATA};
+  my $home = $ENV{HOME} || $ENV{LOCALAPPDATA};
 
-    unless ( -d $home . "/.bankholidays" ){
-        mkdir($home."/.bankholidays");
-    }
+  unless ( -d $home . "/.bankholidays" ) {
+    mkdir( $home . "/.bankholidays" );
+  }
 
-    my $cache = $home . "/.bankholidays/frbholidays.html";
+  my $cache = $home . "/.bankholidays/frbholidays.html";
 
-    # Cache the content from the FRB since holdays are unlikely to
-    # change from day to day (or year to year)
+  # Cache the content from the FRB since holdays are unlikely to
+  # change from day to day (or year to year)
 
-    my $content;
+  my $content;
 
-    if (-f $cache && (time() - (stat($cache))[9]) < 86400) {
-        open(my $fh, "<", $cache) or die $!;
-        local $/ = undef;
-        $content = <$fh>;
-        close $fh;
-    } else {
-        my $url = 'http://www.federalreserve.gov/aboutthefed/k8.htm';
+  if ( -f $cache && ( time() - ( stat($cache) )[9] ) < 86400 ) {
+    open( my $fh, "<", $cache ) or die $!;
+    local $/ = undef;
+    $content = <$fh>;
+    close $fh;
+  }
+  else {
+    my $url = 'http://www.federalreserve.gov/aboutthefed/k8.htm';
 
-        my $request = new HTTP::Request( 'GET', $url );
+    my $request = new HTTP::Request( 'GET', $url );
 
-        my $response = $ua->request($request);
+    my $response = $ua->request($request);
 
-        $content = $response->content();
+    $content = $response->content();
 
-        open(my$fh, ">", $cache) or die $!;
-        print $fh $content;
-        close $fh;
-    }
+    open( my $fh, ">", $cache ) or die $!;
+    print $fh $content;
+    close $fh;
+  }
 
-    $te->parse($content);
+  $te->parse($content);
 
-    my $months = {
-        'January'   => 1,
-        'February'  => 2,
-        'March'     => 3,
-        'April'     => 4,
-        'May'       => 5,
-        'June'      => 6,
-        'July'      => 7,
-        'August'    => 8,
-        'September' => 9,
-        'October'   => 10,
-        'November'  => 11,
-        'December'  => 12
-    };
+  my $months = {
+    'January'   => 1,
+    'February'  => 2,
+    'March'     => 3,
+    'April'     => 4,
+    'May'       => 5,
+    'June'      => 6,
+    'July'      => 7,
+    'August'    => 8,
+    'September' => 9,
+    'October'   => 10,
+    'November'  => 11,
+    'December'  => 12
+  };
 
-    my $holidays;
+  my $holidays;
 
-    foreach my $ts ( $te->tables ) {
-        next if ( $ts->coords ) != 2;
-        my @colyears;
-        foreach my $row ( $ts->rows ) {
+  foreach my $ts ( $te->tables ) {
+    next if ( $ts->coords ) != 2;
+    my @colyears;
+    foreach my $row ( $ts->rows ) {
 
-            next unless @$row;
-            map { s/\r|\n//g if $_ } @$row;
-            my $colcount = 0;
-            foreach my $col (@$row) {
-                if ($col) {
-                    if ( $col =~ /(\d{4})/ ) {
-                        $colyears[$colcount] = $1;
-                    } elsif ( $col =~ /(\w+)\s(\d{1,2})(\*?)/ ) {
-                        push @{ $holidays->{ $colyears[$colcount] }->{ $months->{$1} } },
-                          {
-                            day     => $2,
-                            satflag => $3
-                          };
+      next unless @$row;
+      map { s/\r|\n//g if $_ } @$row;
+      my $colcount = 0;
+      foreach my $col (@$row) {
+        if ($col) {
+          if ( $col =~ /(\d{4})/ ) {
+            $colyears[$colcount] = $1;
+          }
+          elsif ( $col =~ /(\w+)\s(\d{1,2})(\*?)/ ) {
+            push @{ $holidays->{ $colyears[$colcount] }->{ $months->{$1} } },
+              {
+              day     => $2,
+              satflag => $3
+              };
 
-                    }
-                }
-                $colcount++;
-            }
+          }
         }
+        $colcount++;
+      }
     }
-    return $holidays;
+  }
+  return $holidays;
 }
 
-sub is_holiday
-{
-    my ( $param, %opts ) = @_;
+sub is_holiday {
+  my ( $param, %opts ) = @_;
 
-    if ( $opts{date} ) {
-        $param->{dt} = $opts{date};
-    }
+  if ( $opts{date} ) {
+    $param->{dt} = $opts{date};
+  }
 
-    if ( $opts{Tomorrow} ) {
-        $param->{dt}->add( days => 1 );
-    } elsif ( $opts{Yesterday} ) {
-        $param->{dt}->subtract( days => 1 );
-    }
-    return 1 if $param->{dt}->dow == 7;
-    foreach my $holiday ( @{ $param->{holidays}->{ $param->{dt}->year }->{ int( $param->{dt}->month ) } } ) {
-        return 1 if int( $param->{dt}->day ) == $holiday->{day};
-    }
-    return undef;
+  if ( $opts{Tomorrow} ) {
+    $param->{dt}->add( days => 1 );
+  }
+  elsif ( $opts{Yesterday} ) {
+    $param->{dt}->subtract( days => 1 );
+  }
+  return 1 if $param->{dt}->dow == 7;
+  foreach my $holiday ( @{ $param->{holidays}->{ $param->{dt}->year }->{ int( $param->{dt}->month ) } } ) {
+    return 1 if int( $param->{dt}->day ) == $holiday->{day};
+  }
+  return undef;
 }
 
 # Preloaded methods go here.

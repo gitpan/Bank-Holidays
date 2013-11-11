@@ -11,10 +11,12 @@ use Bank::Holidays;
 use DateTime;
 ok(1); # If we made it this far, we're ok.
 
-#########################
+ok($curr = DateTime->now());
+# Check any old day is not a holiday;
 
-# Insert your test code below, the Test::More module is use()ed here so read
-# its man page ( perldoc Test::More ) for help writing this test script.
-
-ok(my $bank = Bank::Holidays->new( dt => DateTime->new(month => 9, day => 30, year => 1974)));
+ok(my $bank = Bank::Holidays->new( dt => DateTime->new(month => 9, day => 30, year => $curr->year)));
 ok($bank->is_holiday ? 0 : 1);
+
+# Check the tomorrow parameter. Returns no.
+
+ok ($bank->is_holiday(Tomorrow => 1) ? 0 : 1);

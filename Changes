@@ -1,11 +1,14 @@
 Revision history for Perl extension Bank::Holidays.
+0.78 Mon Nov 11 11:49:00 2013
+  - Improve the tests to ensure proper function.
+  
 0.76 Tue Nov 05 01:36:00 2013
   - Use make dist. (Color me shamed)
 
 0.75 Tue Nov 05 11:49:00 2013
   - Cache the data from the Fed to avoid reloading the page.
       Helps with performance.
-      
+
 0.66 Fri Mar 02 07:54:00 2012
   - rleap found out that LWP::Simple can no longer read the
        holidays page. Switched to UA module and it works fine.

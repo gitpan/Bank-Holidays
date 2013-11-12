@@ -32,7 +32,7 @@ our @EXPORT = qw(
 
 );
 
-our $VERSION = '0.78';
+our $VERSION = '0.79';
 
 sub new {
   my ( $package, %params ) = @_;
@@ -206,7 +206,7 @@ Tyler Hardison, E<lt>thardison@seraph-net.netE<gt>
 
 Alex White E<lt>wu@geekfarm.orgE<gt> - For providing a patch for 2010 changes to the fed's site.
 
-Robert Leap E<lt>robertleap@gmail.comE-<gt> - For providing a patch for the 2012-2016 holday period.
+Robert Leap E<lt>robertleap@gmail.comE<gt> - For providing a patch for the 2012-2016 holday period.
 
 =head1 COPYRIGHT AND LICENSE
 
